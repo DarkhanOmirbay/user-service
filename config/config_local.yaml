@@ -1,0 +1,7 @@
+env: "local"
+storage_path: "postgres://postgres:703905@localhost/socnet?sslmode=disable"
+token_ttl: 1h
+grpc:
+  port: 44044
+  timeout: 10h
+migrations_path: ./migrations
