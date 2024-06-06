@@ -38,7 +38,7 @@ func (u *User) EditProfile(ctx context.Context, userId int64, user ssov1.User) (
 
 	log := u.log.With(slog.String("op", op),
 		slog.String("user id ", strconv.FormatInt(userId, 10)))
-	log.Info("")
+
 	updatedUser, err := u.userProvider.GetUser(ctx, userId)
 	if err != nil {
 		switch {

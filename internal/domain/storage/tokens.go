@@ -52,23 +52,23 @@ func (s *AuthStorage) SaveToken(ctx context.Context, tokenPlainText string, user
 	return true, nil
 }
 
-func (s *AuthStorage) IsAuthenticated(ctx context.Context, tokenPlainText string) (bool, error) {
+func (s *AuthStorage) IsAuthenticated(ctx context.Context, tokenPlainText string) (bool, int64, error) {
 	const op = "storage.IsAuthenticated"
 	tokenHash := sha256.Sum256([]byte(tokenPlainText))
 	stmt, err := s.db.Prepare(`SELECT id,fname,lname,email,password_hash,activated FROM users INNER JOIN tokens t ON users.id = t.user_id WHERE t.hash = $1 AND t.expiry > $2`)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return false, fmt.Errorf("%s: %w", op, ErrUserNotFound)
+			return false, 0, fmt.Errorf("%s: %w", op, ErrUserNotFound)
 		default:
-			return false, fmt.Errorf("%s: %w", op, err)
+			return false, 0, fmt.Errorf("%s: %w", op, err)
 		}
 	}
 
 	row := stmt.QueryRowContext(ctx, tokenHash[:], time.Now())
 
 	if errors.Is(row.Err(), sql.ErrNoRows) {
-		return false, nil
+		return false, 0, nil
 	}
 
 	var user models.User
@@ -83,12 +83,12 @@ func (s *AuthStorage) IsAuthenticated(ctx context.Context, tokenPlainText string
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return false, nil
+			return false, 0, nil
 		default:
-			return false, err
+			return false, 0, err
 		}
 	}
-	return true, nil
+	return true, user.ID, nil
 }
 
 func (s *AuthStorage) CheckTokens() {

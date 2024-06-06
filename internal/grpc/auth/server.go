@@ -30,7 +30,7 @@ type Auth interface {
 	IsAuthenticated(
 		ctx context.Context,
 		token string,
-	) (bool, error)
+	) (bool, int64, error)
 }
 
 type serverAPI struct {
@@ -123,7 +123,7 @@ func (s *serverAPI) IsAuthenticated(
 		return nil, status.Error(codes.InvalidArgument, "token is required")
 	}
 
-	isAuthenticated, err := s.auth.IsAuthenticated(ctx, in.GetToken())
+	isAuthenticated, user_id, err := s.auth.IsAuthenticated(ctx, in.GetToken())
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -132,5 +132,5 @@ func (s *serverAPI) IsAuthenticated(
 		return nil, status.Error(codes.Internal, "failed to check admin status")
 	}
 
-	return &ssov1.IsAuthenticatedResponse{IsAuthenticated: isAuthenticated}, nil
+	return &ssov1.IsAuthenticatedResponse{IsAuthenticated: isAuthenticated, UserId: user_id}, nil
 }

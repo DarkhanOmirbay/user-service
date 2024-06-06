@@ -28,7 +28,7 @@ type AuthProvider interface {
 	IsAdmin(ctx context.Context, userID int64) (bool, error)
 	App(ctx context.Context, appID int) (models.App, error)
 	SaveToken(ctx context.Context, tokenPlainText string, userId int64) (bool, error)
-	IsAuthenticated(ctx context.Context, token string) (bool, error)
+	IsAuthenticated(ctx context.Context, token string) (bool, int64, error)
 }
 
 type Auth struct {
@@ -152,7 +152,7 @@ func (a *Auth) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 	return isAdmin, nil
 }
 
-func (a *Auth) IsAuthenticated(ctx context.Context, token string) (bool, error) {
+func (a *Auth) IsAuthenticated(ctx context.Context, token string) (bool, int64, error) {
 	const op = "Auth.IsAuthenticated"
 
 	log := a.log.With(
@@ -162,12 +162,12 @@ func (a *Auth) IsAuthenticated(ctx context.Context, token string) (bool, error) 
 
 	log.Info("checking if user is authenticated")
 
-	isAuthenticated, err := a.authProvider.IsAuthenticated(ctx, token)
+	isAuthenticated, user_id, err := a.authProvider.IsAuthenticated(ctx, token)
 	if err != nil {
-		return false, fmt.Errorf("%s: %w", op, err)
+		return false, 0, fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("checked if user is authenticated", slog.Bool("is_authenticated", isAuthenticated))
 
-	return isAuthenticated, nil
+	return isAuthenticated, user_id, nil
 }
